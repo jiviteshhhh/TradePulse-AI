@@ -5,7 +5,7 @@ Maintained by: Gatha Jain (@gathajain04-ui)
 """
 
 from typing import List, Optional
-from pydantic import BaseModel
+from ..compat import BaseModel
 from .technicals import Candle, TechnicalIndicators
 from ..nlp_sentiment.news_feed import NewsFeedManager
 

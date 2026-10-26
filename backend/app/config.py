@@ -3,7 +3,7 @@ TradePulse AI - Configuration & Risk Governance Settings
 Maintained by: Gatha Jain (@gathajain04-ui)
 """
 
-from pydantic import BaseModel
+from .compat import BaseModel
 from typing import List
 
 

@@ -5,7 +5,7 @@ Maintained by: Gatha Jain (@gathajain04-ui)
 """
 
 from typing import List, Dict, Tuple
-from pydantic import BaseModel
+from ..compat import BaseModel
 
 
 class Candle(BaseModel):

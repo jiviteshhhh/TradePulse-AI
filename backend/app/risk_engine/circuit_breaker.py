@@ -5,8 +5,8 @@ Maintained by: Gatha Jain (@gathajain04-ui)
 """
 
 import time
-from typing import Dict, Any, List
-from pydantic import BaseModel
+from typing import Dict, Any, List, Tuple
+from ..compat import BaseModel
 
 
 class RiskStatus(BaseModel):
@@ -77,17 +77,9 @@ class CircuitBreakerEngine:
             emergency_kill_switch_engaged=self.emergency_kill_switch_engaged
         )
 
-    def can_open_new_trade(self) -> Tuple_Bool_Reason:
+    def can_open_new_trade(self) -> Tuple[bool, str]:
         if self.is_halted:
             return False, f"Trading Halted: {self.halt_reason}"
         if self.emergency_kill_switch_engaged:
             return False, "Emergency Kill Switch is currently ENGAGED"
         return True, "Risk validation passed"
-
-
-class Tuple_Bool_Reason:
-    def __init__(self, allowed: bool, reason: str):
-        self.allowed = allowed
-        self.reason = reason
-    def __iter__(self):
-        return iter((self.allowed, self.reason))

@@ -7,7 +7,7 @@ Maintained by: Gatha Jain (@gathajain04-ui)
 import time
 import uuid
 from typing import List, Dict, Optional
-from pydantic import BaseModel
+from ..compat import BaseModel
 
 
 class TradePosition(BaseModel):

@@ -6,7 +6,7 @@ Maintained by: Gatha Jain (@gathajain04-ui)
 
 import time
 from typing import Dict, List, Optional
-from pydantic import BaseModel
+from ..compat import BaseModel
 
 
 class NewsItem(BaseModel):
