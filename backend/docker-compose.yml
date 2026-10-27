@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  tradepulse-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tradepulse_ai_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+    volumes:
+      - ./app:/app/app
+      - ../tradepulse_audit.db:/app/tradepulse_audit.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
