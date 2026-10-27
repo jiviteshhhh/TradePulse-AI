@@ -1,0 +1,209 @@
+---
+name: Institutional Algorithmic Terminal
+colors:
+  surface: '#0f131d'
+  surface-dim: '#0f131d'
+  surface-bright: '#353944'
+  surface-container-lowest: '#0a0e18'
+  surface-container-low: '#171b26'
+  surface-container: '#1c1f2a'
+  surface-container-high: '#262a35'
+  surface-container-highest: '#313540'
+  on-surface: '#dfe2f1'
+  on-surface-variant: '#d8c3ad'
+  inverse-surface: '#dfe2f1'
+  inverse-on-surface: '#2c303b'
+  outline: '#a08e7a'
+  outline-variant: '#534434'
+  surface-tint: '#ffb95f'
+  primary: '#ffc174'
+  on-primary: '#472a00'
+  primary-container: '#f59e0b'
+  on-primary-container: '#613b00'
+  inverse-primary: '#855300'
+  secondary: '#4cd7f6'
+  on-secondary: '#003640'
+  secondary-container: '#03b5d3'
+  on-secondary-container: '#00424e'
+  tertiary: '#56e5a9'
+  on-tertiary: '#003824'
+  tertiary-container: '#30c88f'
+  on-tertiary-container: '#004e34'
+  error: '#ffb4ab'
+  on-error: '#690005'
+  error-container: '#93000a'
+  on-error-container: '#ffdad6'
+  primary-fixed: '#ffddb8'
+  primary-fixed-dim: '#ffb95f'
+  on-primary-fixed: '#2a1700'
+  on-primary-fixed-variant: '#653e00'
+  secondary-fixed: '#acedff'
+  secondary-fixed-dim: '#4cd7f6'
+  on-secondary-fixed: '#001f26'
+  on-secondary-fixed-variant: '#004e5c'
+  tertiary-fixed: '#6ffbbe'
+  tertiary-fixed-dim: '#4edea3'
+  on-tertiary-fixed: '#002113'
+  on-tertiary-fixed-variant: '#005236'
+  background: '#0f131d'
+  on-background: '#dfe2f1'
+  surface-variant: '#313540'
+typography:
+  headline-xl:
+    fontFamily: Space Grotesk
+    fontSize: 32px
+    fontWeight: '600'
+    lineHeight: 40px
+    letterSpacing: -0.03em
+  headline-lg:
+    fontFamily: Space Grotesk
+    fontSize: 24px
+    fontWeight: '600'
+    lineHeight: 32px
+    letterSpacing: -0.02em
+  headline-md:
+    fontFamily: Space Grotesk
+    fontSize: 20px
+    fontWeight: '500'
+    lineHeight: 28px
+    letterSpacing: -0.01em
+  body-lg:
+    fontFamily: Geist
+    fontSize: 16px
+    fontWeight: '400'
+    lineHeight: 24px
+  body-md:
+    fontFamily: Geist
+    fontSize: 14px
+    fontWeight: '400'
+    lineHeight: 20px
+  body-sm:
+    fontFamily: Geist
+    fontSize: 12px
+    fontWeight: '400'
+    lineHeight: 16px
+  label-md:
+    fontFamily: JetBrains Mono
+    fontSize: 13px
+    fontWeight: '500'
+    lineHeight: 18px
+    letterSpacing: -0.01em
+  label-sm:
+    fontFamily: JetBrains Mono
+    fontSize: 11px
+    fontWeight: '500'
+    lineHeight: 14px
+    letterSpacing: 0.02em
+  label-xs:
+    fontFamily: JetBrains Mono
+    fontSize: 10px
+    fontWeight: '600'
+    lineHeight: 12px
+    letterSpacing: 0.05em
+rounded:
+  sm: 0.125rem
+  DEFAULT: 0.25rem
+  md: 0.375rem
+  lg: 0.5rem
+  xl: 0.75rem
+  full: 9999px
+spacing:
+  gutter: 0.5rem
+  margin: 0.75rem
+  space-xs: 0.25rem
+  space-sm: 0.375rem
+  space-md: 0.75rem
+  space-lg: 1rem
+  space-xl: 1.5rem
+---
+
+## Brand & Style
+
+This design system establishes an ultra-refined, high-density algorithmic trading environment inspired by next-generation institutional market terminals. It completely strips away consumer-grade SaaS electric blues in favor of high-frequency precision: rich obsidian-slate substrates, crisp amber-gold telemetry triggers, and laser-precise signal indicators.
+
+### Aesthetic Foundation
+- **Style:** High-Density Institutional Minimalism crossed with Precision Dark Terminal Telemetry.
+- **Atmosphere:** Rigorous, calculated, mission-critical, sovereign. Every element prioritizes data legibility, latency transparency, and risk mitigation over decorative fluff.
+- **Target Audience:** Quantitative traders, portfolio risk officers, algorithmic execution desks, and institutional crypto/FX specialists.
+- **Sensory Tone:** Monolithic dark planes, razor-thin panel separations, optical amber highlights for execution pathways, and unambiguous emerald/crimson operational telemetry.
+
+## Colors
+
+The palette establishes an authoritative dark terminal ecosystem structured strictly around institutional execution hierarchy.
+
+### Core Architecture
+- **Primary Accent (`#F59E0B` Amber Gold / `#D97706` Deep Gold):** Replaces all legacy blue components. Reserved strictly for primary action verbs (e.g., "Deploy Strategy", "Execute Order"), active navigational tab state lines, AI algorithmic confidence scores, and focused input carets.
+- **Secondary Accent (`#06B6D4` Neon Cyan / `#0891B2` Dark Cyan):** Dedicated to auxiliary telemetry, system diagnostic feeds, WebSocket link confirmations, and high-frequency data streaming badges.
+- **Market Semantic Pairings:**
+  - **Bullish / Profit / Long (`#10B981` Emerald Mint):** Used exclusively for positive PnL, bid depth, buy fills, and live liquidity surges.
+  - **Bearish / Loss / Kill Switch (`#EF4444` Crimson / `#991B1B` Deep Crimson):** Reserved strictly for negative delta, ask walls, margin warnings, and the instant-cancel / emergency position-kill mechanism.
+
+### Neutral Matrix
+- **Canvas Base (`#0B0F19`):** Pure deep charcoal-slate backing.
+- **Panel Surface (`#131A26`):** Structural containment for charts, order books, and strategy matrices.
+- **Elevated Widget Surface (`#1C2433`):** Dropdowns, modals, floating action bars, and hovered table rows.
+- **Hairline Dividers (`#263347`):** Precision 1px grid alignments.
+- **Text Layers:** Primary (`#F8FAFC`), Secondary (`#94A3B8`), Muted (`#475569`).
+
+## Typography
+
+The typographic hierarchy balances structural command headers with surgical monospace accuracy for streaming financial vectors.
+
+- **Headlines (Space Grotesk):** Engineered for metric summaries, module anchors, and panel headers. Slightly condensed geometric proportions prevent horizontal bloat in wide-aspect trading desks.
+- **Interface & Prose (Geist):** Handles conversational AI insights, strategy parameters, tooltip rationales, and settings matrices with zero optical distortion.
+- **Quantitative & Telemetry (JetBrains Mono):** Mandated for all numerical tables, order books, execution pricing, latency metrics (ms), timestamps (UTC), and tag statuses. Prevents optical shifting during millisecond tick fluctuations.
+
+## Layout & Spacing
+
+Trading desks demand dense information throughput with zero wasted negative space. The layout model prioritizes multi-monitor grid arrangements and dockable, modular panes.
+
+### System Spacing Rhythm
+- **Modular Window Tiling:** 12-column sub-divided dock layout. Outer canvas margins are tightly bound at `0.75rem` (`12px`) to maximize data real estate across 1440px+ viewports.
+- **Dense Grid Alignment:** Gutters are clamped to `0.5rem` (`8px`) between contiguous data panes, enforced with 1px structural border separators.
+- **Component Padding Scale:**
+  - Micro telemetry nodes & inline tags: `space-xs` (4px) to `space-sm` (6px).
+  - Standard table row heights: clamped to 28px – 34px vertical bounds using `space-xs` vertical and `space-sm` horizontal padding.
+  - High-level metric overview blocks: `space-md` (12px) internal padding.
+
+## Elevation & Depth
+
+Visual hierarchy does not rely on soft diffused consumer shadows. It operates exclusively through controlled luminance stepping and crisp planar borders.
+
+### Surface Tiers
+1. **Level 0 (Workspace Canvas - `#0B0F19`):** Lowest visual priority; serves as the frame for docked panes.
+2. **Level 1 (Docked Containers - `#131A26`):** Chart viewport, order blotter, AI telemetry feed. Separated by `1px solid #263347`.
+3. **Level 2 (Active Widget / Overlays - `#1C2433`):** Quick-order entry drawers, context menus, tooltips. Uses subtle 1px border highlights (`#334155`) with an ambient drop: `0px 4px 16px rgba(0, 0, 0, 0.6)`.
+4. **Level 3 (Emergency / Alert Modals):** Framed in `#EF4444` (Kill switch) or `#F59E0B` (Order confirmation) with a directional hard glow `0 0 24px rgba(245, 158, 11, 0.15)`.
+
+## Shapes
+
+To sustain an institutional terminal feel, rounded geometry is severely restricted.
+
+- **Global Radius:** Clamped to Level `1` (`0.25rem` / `4px`). Sharp, professional, and dense.
+- **Inner Data Elements:** Badges, small inputs, table highlights, and tabs use `2px` to preserve baseline optical sharpness.
+- **Circular Usage:** Constrained strictly to status pulse dots (e.g., green socket connected ping, red circuit breaker trip). No pill buttons or fully rounded forms exist within this system.
+
+## Components
+
+### Buttons
+- **Primary Execution (Amber Gold):** Background `#F59E0B`, text `#0B0F19` (`font-weight: 600`), 4px radius. On hover: `#D97706`. On focus: 1px ring `#FBBF24` with 2px offset.
+- **Secondary Utility (Ghost Slate):** Background `#1C2433`, text `#F8FAFC`, border `1px solid #263347`. On hover: `#263347`.
+- **System Kill Switch (Emergency Red):** Background `#EF4444`, text `#FFFFFF`, font `JetBrains Mono` bold uppercase. On hover: `#DC2626`. Pulsing active border on high-volatility events.
+- **Teal Diagnostic Action:** Background `transparent`, text `#06B6D4`, border `1px solid #06B6D4/40`.
+
+### Active Navigation & Tabs
+- Horizontal tab headers sit on `#131A26` with transparent backgrounds.
+- Active tab displays text `#F8FAFC` anchored by a distinct bottom highlight line: `2px solid #F59E0B`. Inactive tabs render `#64748B`.
+
+### AI Badges & Telemetry Chips
+- **AI Model Status:** Background `rgba(245, 158, 11, 0.10)`, text `#F59E0B`, border `1px solid rgba(245, 158, 11, 0.3)`. Font: `JetBrains Mono`, `label-xs`.
+- **Stream Connected / Latency Tag:** Background `rgba(6, 182, 212, 0.10)`, text `#06B6D4`, border `1px solid rgba(6, 182, 212, 0.25)`.
+- **Bullish / Bearish Sentiment Chips:** Emerald green (`rgba(16, 185, 129, 0.12)`) and crimson red (`rgba(239, 68, 68, 0.12)`) pill tags with crisp 1px borders.
+
+### Input Fields & Controls
+- **Standard Input:** Background `#0B0F19`, border `1px solid #263347`, text `#F8FAFC`, caret `#F59E0B`. Active focus transitions border directly to `#F59E0B` without fuzzy outer rings.
+- **Checkboxes & Radios:** Sharp 2px rounded boxes. Checked fill is `#F59E0B` with charcoal checkmark `#0B0F19`.
+
+### Data Cards & Tables
+- **Table Blotters:** Header cells rendered in `JetBrains Mono`, `10px`, uppercase, color `#64748B`. Row borders `1px solid #1C2433`. Alternating row hover fills with `#1C2433/60`.
+- **Active Trade Cards:** Border left indicator: `3px solid #10B981` (Long) or `3px solid #EF4444` (Short), with background `#131A26`.

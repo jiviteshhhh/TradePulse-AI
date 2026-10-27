@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-headline: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #0B0F19;
+  color: #F8FAFC;
+}
+
+/* Institutional custom scrollbars */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0F19;
+}
+::-webkit-scrollbar-thumb {
+  background: #263347;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Monospace numeric rendering for zero jitter */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Terminal pulsing animation */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes flash-green {
+  0% { background-color: rgba(16, 185, 129, 0.35); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flash-red {
+  0% { background-color: rgba(239, 68, 68, 0.35); }
+  100% { background-color: transparent; }
+}
+
+.flash-buy {
+  animation: flash-green 0.7s ease-out;
+}
+
+.flash-sell {
+  animation: flash-red 0.7s ease-out;
+}

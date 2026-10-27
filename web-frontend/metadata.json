@@ -1,0 +1,6 @@
+{
+  "name": "Institutional Algorithmic Terminal",
+  "description": "High-density institutional trading and algorithmic execution terminal featuring real-time order books, multi-venue order routing, quantitative strategies, and risk controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

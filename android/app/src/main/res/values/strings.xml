@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">TradePulse AI</string>
+    <string name="kill_switch">EMERGENCY KILL SWITCH</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="terminal">Terminal</string>
+    <string name="risk">Risk</string>
+    <string name="trades">Trades</string>
+</resources>

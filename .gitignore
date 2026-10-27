@@ -1,0 +1,10 @@
+*.zip
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+.gradle/
+build/
+node_modules/
+dist/
