@@ -1,7 +1,7 @@
 /**
- * TradePulse AI - Backend Bridge Service
- * Connects the Institutional Algorithmic Terminal to Gatha's FastAPI Backend
- * & Android Studio Kotlin Bridge
+ * TradePulse AI - Full-Featured Institutional Backend Client
+ * Connects the Algorithmic Terminal to Gatha's Python/FastAPI Backend & Android Bridge
+ * Maintained by: Gatha Jain (@gathajain04-ui) & Jivitesh (@jiviteshhhh)
  */
 
 const getApiBaseUrl = () => {
@@ -27,19 +27,7 @@ export interface BackendTelemetry {
   account_balance: number;
   unrealized_pnl: number;
   open_trades_count: number;
-  open_positions: Array<{
-    id: string;
-    pair: string;
-    direction: string;
-    lot_size: number;
-    entry_price: number;
-    current_price: number;
-    stop_loss: number;
-    take_profit: number;
-    floating_pnl: number;
-    pips_gained: number;
-    status: string;
-  }>;
+  open_positions: Array<any>;
   circuit_breaker: {
     circuit_breaker_active: boolean;
     is_halted: boolean;
@@ -51,6 +39,8 @@ export interface BackendTelemetry {
     loss_capacity_used_pct: number;
     emergency_kill_switch_engaged: boolean;
   };
+  risk_metrics?: any;
+  orderbook?: any;
   signal: {
     pair: string;
     direction: string;
@@ -74,7 +64,6 @@ export class BackendApiService {
   public connectWebSocket() {
     try {
       const url = getWsUrl();
-      console.log(`[TradePulse AI] Connecting to Backend WebSocket: ${url}`);
       this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
@@ -92,22 +81,21 @@ export class BackendApiService {
             this.listeners.forEach((cb) => cb(payload));
           }
         } catch (e) {
-          // ignore keepalive
+          // ignore
         }
       };
 
       this.ws.onclose = () => {
-        console.warn('[TradePulse AI] Backend WebSocket disconnected. Reconnecting in 3s...');
         if (!this.reconnectInterval) {
           this.reconnectInterval = setInterval(() => this.connectWebSocket(), 3000);
         }
       };
 
-      this.ws.onerror = (err) => {
-        console.warn('[TradePulse AI] WebSocket error (Backend offline or starting up):', err);
+      this.ws.onerror = () => {
+        // quiet fallback
       };
     } catch (err) {
-      console.warn('[TradePulse AI] Could not initialize WebSocket:', err);
+      // quiet fallback
     }
   }
 
@@ -118,10 +106,103 @@ export class BackendApiService {
     };
   }
 
+  public sendWsCommand(action: string, payload: any = {}) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ action, ...payload }));
+    }
+  }
+
+  // --- Order Blotter & Execution ---
+  public async placeOrder(orderParams: any) {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/orders/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderParams),
+      });
+      return await res.json();
+    } catch (e) {
+      console.warn('[TradePulse AI] Could not place order via backend:', e);
+      return null;
+    }
+  }
+
+  public async cancelOrder(orderId: string) {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/orders/${orderId}`, {
+        method: 'DELETE',
+      });
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async closePosition(positionId: string) {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/orders/positions/${positionId}/close`, {
+        method: 'POST',
+      });
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async updatePositionTpSl(positionId: string, tp?: number, sl?: number) {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/orders/positions/${positionId}/tpsl`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ takeProfit: tp, stopLoss: sl }),
+      });
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // --- Quantitative Strategies ---
+  public async fetchStrategies() {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/strategies/`);
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async toggleStrategy(strategyId: string) {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/strategies/${strategyId}/toggle`, {
+        method: 'POST',
+      });
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async updateStrategyParam(strategyId: string, key: string, value: any) {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/strategies/${strategyId}/params`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value }),
+      });
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // --- Risk Governance & Kill Switch ---
   public async triggerKillSwitch(reason: string = 'User Clicked Emergency Kill Switch') {
     if (typeof window !== 'undefined' && (window as any).AndroidBridge?.onKillSwitchTriggered) {
       (window as any).AndroidBridge.onKillSwitchTriggered(reason);
     }
+
+    this.sendWsCommand('KILL_SWITCH', { mode: 'FULL_FLATTEN', reason });
 
     try {
       const res = await fetch(`${getApiBaseUrl()}/api/v1/risk/kill-switch`, {
@@ -131,12 +212,12 @@ export class BackendApiService {
       });
       return await res.json();
     } catch (err) {
-      console.warn('[TradePulse AI] Failed to POST kill-switch to backend:', err);
       return null;
     }
   }
 
   public async updateMaxDailyLoss(maxDailyLoss: number) {
+    this.sendWsCommand('UPDATE_MAX_LOSS', { max_daily_loss: maxDailyLoss });
     try {
       const res = await fetch(`${getApiBaseUrl()}/api/v1/risk/max-loss`, {
         method: 'POST',
@@ -145,16 +226,44 @@ export class BackendApiService {
       });
       return await res.json();
     } catch (err) {
-      console.warn('[TradePulse AI] Failed to update max loss:', err);
       return null;
     }
   }
 
-  public async fetchSystemStatus() {
+  // --- Diagnostics ---
+  public async fetchColoNodes() {
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/status`);
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/diagnostics/colo-nodes`);
       return await res.json();
-    } catch (err) {
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async fetchLogs() {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/diagnostics/logs`);
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // --- Market Data ---
+  public async fetchOrderBook(symbol: string) {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/market/orderbook?symbol=${encodeURIComponent(symbol)}`);
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  public async fetchCandles(symbol: string, timeframe: string = '15m') {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/market/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${timeframe}`);
+      return await res.json();
+    } catch (e) {
       return null;
     }
   }

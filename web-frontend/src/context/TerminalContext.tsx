@@ -353,6 +353,9 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         '0'
       )}:${String(now.getSeconds()).padStart(2, '0')}`;
 
+      // Dispatch order to Python backend execution router
+      backendApi.placeOrder(params);
+
       const newOrder: AlgoOrder = {
         id,
         clientOrderId: `${params.type}-${params.symbol.slice(0, 3)}-${Math.floor(Math.random() * 999)}`,
@@ -453,6 +456,7 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Cancel order
   const cancelOrder = useCallback((orderId: string) => {
+    backendApi.cancelOrder(orderId);
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: 'CANCELED' } : o))
     );
@@ -461,6 +465,7 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Close position
   const closePosition = useCallback((positionId: string) => {
+    backendApi.closePosition(positionId);
     setPositions((prev) => {
       const target = prev.find((p) => p.id === positionId);
       if (target) {
@@ -475,6 +480,7 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Update TP/SL
   const updatePositionTpSl = useCallback((positionId: string, tp?: number, sl?: number) => {
+    backendApi.updatePositionTpSl(positionId, tp, sl);
     setPositions((prev) =>
       prev.map((p) => (p.id === positionId ? { ...p, tpPrice: tp, slPrice: sl } : p))
     );
@@ -483,6 +489,7 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Toggle strategy active/pause
   const toggleStrategyStatus = useCallback((strategyId: string) => {
+    backendApi.toggleStrategy(strategyId);
     setStrategies((prev) =>
       prev.map((s) => {
         if (s.id === strategyId) {
@@ -500,6 +507,7 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Update strategy parameter
   const updateStrategyParam = useCallback((strategyId: string, key: string, value: number | string) => {
+    backendApi.updateStrategyParam(strategyId, key, value);
     setStrategies((prev) =>
       prev.map((s) => {
         if (s.id === strategyId) {

@@ -1,7 +1,8 @@
 """
-TradePulse AI - Autonomous Forex Trading Backend Engine
-Entry Point & Async Market Orchestration
+TradePulse AI - Institutional Algorithmic Backend Engine
+Entry Point, Real-Time Market Simulation & WebSocket Telemetry
 Maintained by: Gatha Jain (@gathajain04-ui)
+Collaborator: Jivitesh (@jiviteshhhh)
 """
 
 import asyncio
@@ -18,19 +19,21 @@ from .strategy.confluence_engine import ConfluenceEngine, ConfluenceSignal
 from .risk_engine.circuit_breaker import CircuitBreakerEngine
 from .risk_engine.position_sizer import PositionSizer
 from .broker.paper_account import PaperBrokerGateway
-from .routers import telemetry, trades, websocket_stream
+from .routers import telemetry, trades, websocket_stream, market, orders, strategies, diagnostics
 from .routers.websocket_stream import manager
+from .routers.market import generate_live_orderbook
+from .routers.strategies import STRATEGIES_DB
 
 app = FastAPI(
-    title="TradePulse AI - Forex Trading Engine",
-    description="Autonomous Multi-Factor US Forex Bot with Circuit Breaker Risk Governance",
-    version="1.0.0"
+    title="TradePulse AI - Institutional Algorithmic Trading Server",
+    description="Backend engine powering the Institutional Algorithmic Terminal & Native Android Studio App",
+    version="2.0.0"
 )
 
-# CORS enabled for Android Studio Emulator (10.0.2.2) and local WiFi devices
+# CORS enabled for all origins, local browser, Vite (5173), and Android Emulator (10.0.2.2)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,7 +53,10 @@ current_prices: Dict[str, float] = {
     "EUR/USD": 1.0850,
     "GBP/USD": 1.2980,
     "USD/JPY": 152.40,
-    "USD/CHF": 0.8650
+    "USD/CHF": 0.8650,
+    "BTC-PERP": 94820.5,
+    "ETH-PERP": 3415.8,
+    "SOL-PERP": 184.45
 }
 candles_cache: Dict[str, List[Candle]] = {}
 latest_signal: Dict = {}
@@ -59,20 +65,25 @@ latest_signal: Dict = {}
 app.include_router(telemetry.router)
 app.include_router(trades.router)
 app.include_router(websocket_stream.router)
+app.include_router(market.router)
+app.include_router(orders.router)
+app.include_router(strategies.router)
+app.include_router(diagnostics.router)
 
 
 def _seed_candles(pair: str, base_price: float):
     candles = []
     curr = base_price
-    t = time.time() - 3600 * 10
-    for _ in range(50):
+    t = time.time() - 3600 * 12
+    for _ in range(60):
         o = curr
-        h = o + random.uniform(0.0003, 0.0012)
-        l = o - random.uniform(0.0003, 0.0012)
+        delta = 0.0008 if "/" in pair and "JPY" not in pair else (0.5 if "JPY" in pair else 80.0)
+        h = o + random.uniform(0.0001, delta)
+        l = o - random.uniform(0.0001, delta)
         c = random.uniform(l, h)
-        v = random.uniform(1500, 8500)
+        v = random.uniform(1500, 9500)
         curr = c
-        candles.append(Candle(timestamp=t, open=round(o, 5), high=round(h, 5), low=round(l, 5), close=round(c, 5), volume=v))
+        candles.append(Candle(timestamp=t, open=round(o, 5 if delta < 1 else 2), high=round(h, 5 if delta < 1 else 2), low=round(l, 5 if delta < 1 else 2), close=round(c, 5 if delta < 1 else 2), volume=v))
         t += 900  # 15 min candles
     candles_cache[pair] = candles
 
@@ -81,22 +92,30 @@ async def market_simulation_and_trading_loop():
     """Background engine simulating real-time market ticks, confluence evaluation, and automated trade dispatch."""
     global latest_signal
     _seed_candles("EUR/USD", 1.0850)
+    _seed_candles("GBP/USD", 1.2980)
+    _seed_candles("USD/JPY", 152.40)
+    _seed_candles("BTC-PERP", 94820.5)
 
     while True:
         try:
-            # 1. Simulate tick movement on US Forex Session
-            delta = random.choice([-0.0002, -0.0001, 0.0, 0.0001, 0.0002])
-            current_prices["EUR/USD"] = round(current_prices["EUR/USD"] + delta, 5)
+            # 1. Simulate tick movement on US Forex Session & Majors
+            for pair in ["EUR/USD", "GBP/USD", "USD/JPY"]:
+                tick_step = 0.0001 if "JPY" not in pair else 0.02
+                delta = random.choice([-tick_step, -tick_step * 0.5, 0.0, tick_step * 0.5, tick_step])
+                precision = 5 if "JPY" not in pair else 2
+                current_prices[pair] = round(current_prices[pair] + delta, precision)
 
-            # Update latest candle
-            pair_candles = candles_cache.setdefault("EUR/USD", [])
-            if pair_candles:
-                pair_candles[-1].close = current_prices["EUR/USD"]
-                pair_candles[-1].high = max(pair_candles[-1].high, current_prices["EUR/USD"])
-                pair_candles[-1].low = min(pair_candles[-1].low, current_prices["EUR/USD"])
-                pair_candles[-1].volume += random.uniform(20, 100)
+                pair_candles = candles_cache.setdefault(pair, [])
+                if pair_candles:
+                    pair_candles[-1].close = current_prices[pair]
+                    pair_candles[-1].high = max(pair_candles[-1].high, current_prices[pair])
+                    pair_candles[-1].low = min(pair_candles[-1].low, current_prices[pair])
+                    pair_candles[-1].volume += random.uniform(15, 80)
 
-            # 2. Broker updates: recalculate open position PnL & check stop-loss/take-profit
+            # Crypto tick drift
+            current_prices["BTC-PERP"] = round(current_prices["BTC-PERP"] + random.uniform(-12.0, 12.0), 1)
+
+            # 2. Broker updates: recalculate open positions PnL & check stop-loss/take-profit
             broker.update_ticks(current_prices)
 
             # 3. Risk Engine Check: Evaluate daily loss vs. max limit
@@ -107,8 +126,8 @@ async def market_simulation_and_trading_loop():
             if risk_status.is_halted and broker.open_positions:
                 broker.emergency_liquidate_all(reason=risk_status.halt_reason)
 
-            # 4. Evaluate Confluence Signal
-            signal = confluence_engine.evaluate("EUR/USD", pair_candles)
+            # 4. Evaluate Confluence Signal on active pair (EUR/USD)
+            signal = confluence_engine.evaluate("EUR/USD", candles_cache.get("EUR/USD", []))
             latest_signal = signal.dict()
 
             # 5. Automated Execution (if qualifies and risk permits)
@@ -131,7 +150,33 @@ async def market_simulation_and_trading_loop():
                     take_profit=signal.recommended_take_profit
                 )
 
-            # 6. Broadcast telemetry packet via WebSocket to Android devices
+            # 6. Generate Live Orderbook for active pair
+            live_ob = generate_live_orderbook("EUR/USD", current_prices["EUR/USD"], 0.0001)
+
+            # 7. Compute Terminal-level Institutional Risk Metrics
+            used_margin = sum(p.lot_size * 1000.0 for p in broker.open_positions.values())
+            free_margin = max(0.0, broker.get_equity() - used_margin)
+            margin_utilization = round((used_margin / (broker.get_equity() or 1.0)) * 100, 2)
+
+            risk_metrics_payload = {
+                "totalEquityUsd": broker.get_equity(),
+                "freeMarginUsd": round(free_margin, 2),
+                "usedMarginUsd": round(used_margin, 2),
+                "marginUtilizationPercent": margin_utilization,
+                "var99_1dUsd": round(broker.get_equity() * 0.018, 2),
+                "var99_1dPercent": 1.80,
+                "cvar99_1dUsd": round(broker.get_equity() * 0.024, 2),
+                "portfolioDeltaUsd": round(sum(p.lot_size * 100000.0 for p in broker.open_positions.values() if p.direction == "BUY") - sum(p.lot_size * 100000.0 for p in broker.open_positions.values() if p.direction == "SELL"), 2),
+                "portfolioGamma": 0.012,
+                "portfolioVega": 14.5,
+                "portfolioThetaPerDay": -22.4,
+                "effectiveLeverage": round(used_margin / (broker.get_equity() or 1.0) * 10.0, 2),
+                "circuitBreakerStatus": "TRIGGERED" if risk_status.is_halted else "NORMAL",
+                "activePositionsCount": len(broker.open_positions),
+                "dailyDrawdownPercent": risk_status.loss_capacity_used_pct
+            }
+
+            # 8. Broadcast comprehensive telemetry packet via WebSocket
             telemetry_payload = {
                 "type": "TELEMETRY_UPDATE",
                 "timestamp": time.time(),
@@ -143,15 +188,17 @@ async def market_simulation_and_trading_loop():
                 "open_trades_count": len(broker.open_positions),
                 "open_positions": [p.dict() for p in broker.open_positions.values()],
                 "circuit_breaker": risk_status.dict(),
+                "risk_metrics": risk_metrics_payload,
                 "signal": latest_signal,
+                "orderbook": live_ob,
                 "sentiment_usd": news_manager.get_currency_sentiment("USD")
             }
             await manager.broadcast(telemetry_payload)
 
         except Exception as e:
-            print(f"[Engine Error]: {e}")
+            print(f"[Market Loop Error]: {e}")
 
-        await asyncio.sleep(1.0)  # 1-second tick cadence
+        await asyncio.sleep(1.0)  # 1-second cadence
 
 
 @app.on_event("startup")
@@ -162,9 +209,10 @@ async def startup_event():
 @app.get("/")
 def health_check():
     return {
-        "service": "TradePulse AI Engine",
+        "service": "TradePulse AI - Institutional Algorithmic Trading Server",
         "author": "Gatha Jain (@gathajain04-ui)",
         "collaborator": "Jivitesh (@jiviteshhhh)",
         "status": "ONLINE",
-        "docs_url": "/docs"
+        "docs_url": "/docs",
+        "websocket_url": "/ws/telemetry"
     }
