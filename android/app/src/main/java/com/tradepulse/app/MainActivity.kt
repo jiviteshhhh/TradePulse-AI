@@ -1,51 +1,128 @@
 package com.tradepulse.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.tradepulse.app.ui.screens.DashboardScreen
-import com.tradepulse.app.ui.screens.RiskGovernanceScreen
-import com.tradepulse.app.ui.screens.TerminalWebViewScreen
-import com.tradepulse.app.ui.screens.TradesScreen
-import com.tradepulse.app.ui.theme.BgDark
-import com.tradepulse.app.ui.theme.ElectricBlue
-import com.tradepulse.app.ui.theme.SurfaceElevated
-import com.tradepulse.app.ui.theme.TextMuted
-import com.tradepulse.app.ui.theme.TradePulseTheme
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.tradepulse.app.firebase.FirebaseAuthManager
+import com.tradepulse.app.ui.screens.*
+import com.tradepulse.app.ui.theme.*
 import com.tradepulse.app.viewmodel.TradingViewModel
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: TradingViewModel by viewModels()
+    private val authManager = FirebaseAuthManager()
+
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        // Permission result handled
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Request Push Notification permission on Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
         setContent {
             TradePulseTheme {
-                MainAppScaffold(viewModel)
+                var isAuthenticated by remember { mutableStateOf(authManager.isUserLoggedIn()) }
+                var userEmail by remember { mutableStateOf(authManager.getUserEmail()) }
+
+                if (!isAuthenticated) {
+                    AuthScreen(
+                        onLoginSuccess = { email ->
+                            userEmail = email
+                            isAuthenticated = true
+                        },
+                        onDemoLogin = {
+                            userEmail = "demo.trader@tradepulse.ai"
+                            isAuthenticated = true
+                        }
+                    )
+                } else {
+                    MainAppScaffold(
+                        viewModel = viewModel,
+                        userEmail = userEmail,
+                        onSignOut = {
+                            authManager.signOut()
+                            isAuthenticated = false
+                        }
+                    )
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainAppScaffold(viewModel: TradingViewModel) {
+fun MainAppScaffold(
+    viewModel: TradingViewModel,
+    userEmail: String,
+    onSignOut: () -> Unit
+) {
     val state by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         containerColor = BgDark,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "TradePulse AI",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = userEmail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextMuted
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onSignOut) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Sign Out",
+                            tint = TextSecondary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = SurfaceElevated
+                )
+            )
+        },
         bottomBar = {
             NavigationBar(
                 containerColor = SurfaceElevated

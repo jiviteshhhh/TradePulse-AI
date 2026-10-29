@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "108529482051",
+    "project_id": "tradepulse-ai-forex",
+    "storage_bucket": "tradepulse-ai-forex.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:108529482051:android:e89452b12fa098c142b65a",
+        "android_client_info": {
+          "package_name": "com.tradepulse.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-mockFirebaseKeyForTradePulseClient"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
