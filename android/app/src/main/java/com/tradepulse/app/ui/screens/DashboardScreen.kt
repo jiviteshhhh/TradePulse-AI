@@ -210,7 +210,7 @@ fun DashboardScreen(
                         color = badgeColor
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    if (state.signal.qualifies_for_execution) {
+                    if (state.signal.qualifiesForExecution) {
                         Text(
                             text = "QUALIFIED FOR EXECUTION",
                             fontSize = 10.sp,
