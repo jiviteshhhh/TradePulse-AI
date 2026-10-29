@@ -60,3 +60,13 @@ data class KillSwitchRequest(
 data class MaxLossUpdateRequest(
     @SerializedName("max_daily_loss") val maxDailyLoss: Double
 )
+
+data class PlaceOrderRequest(
+    @SerializedName("symbol") val symbol: String,
+    @SerializedName("side") val side: String,
+    @SerializedName("type") val type: String = "MARKET",
+    @SerializedName("size") val size: Double = 0.1,
+    @SerializedName("price") val price: Double = 0.0,
+    @SerializedName("stopLoss") val stopLoss: Double? = null,
+    @SerializedName("takeProfit") val takeProfit: Double? = null
+)

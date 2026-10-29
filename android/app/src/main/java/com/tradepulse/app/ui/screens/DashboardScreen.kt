@@ -234,6 +234,68 @@ fun DashboardScreen(
                         modifier = Modifier.padding(vertical = 1.dp)
                     )
                 }
+
+                if (state.signal.qualifiesForExecution) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { viewModel.executeManualTrade(state.signal.direction) },
+                        modifier = Modifier.fillMaxWidth().height(46.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                        shape = RoundedCornerShape(8.dp),
+                        enabled = !state.circuitBreaker.isHalted
+                    ) {
+                        Text(
+                            text = "⚡ EXECUTE AI ${state.signal.direction} SIGNAL (${state.signal.confidencePercentage}%)",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Direct Market Execution (One-Tap Buy / Sell)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Button(
+                onClick = { viewModel.executeManualTrade("BUY") },
+                modifier = Modifier.weight(1f).height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                shape = RoundedCornerShape(10.dp),
+                enabled = !state.circuitBreaker.isHalted
+            ) {
+                Text("BUY EUR/USD", fontWeight = FontWeight.Bold, color = Color.Black, fontSize = 14.sp)
+            }
+            Button(
+                onClick = { viewModel.executeManualTrade("SELL") },
+                modifier = Modifier.weight(1f).height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = CoralRed),
+                shape = RoundedCornerShape(10.dp),
+                enabled = !state.circuitBreaker.isHalted
+            ) {
+                Text("SELL EUR/USD", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
+            }
+        }
+
+        state.statusMessage?.let { msg ->
+            Spacer(modifier = Modifier.height(10.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SurfaceElevated),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = msg,
+                    fontSize = 12.sp,
+                    color = ElectricBlue,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(10.dp)
+                )
             }
         }
 

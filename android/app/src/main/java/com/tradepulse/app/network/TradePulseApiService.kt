@@ -23,6 +23,9 @@ interface TradePulseApiService {
     @POST("/api/v1/risk/reset")
     suspend fun resetCircuitBreaker(): Response<Map<String, Any>>
 
+    @POST("/api/v1/orders/")
+    suspend fun placeOrder(@Body request: com.tradepulse.app.data.model.PlaceOrderRequest): Response<Map<String, Any>>
+
     @GET("/api/v1/trades/active")
     suspend fun getActiveTrades(): Response<List<PositionModel>>
 

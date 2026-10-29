@@ -98,6 +98,32 @@ class TradingViewModel : ViewModel() {
         }
     }
 
+    fun executeManualTrade(side: String, pair: String = _uiState.value.activePair, lotSize: Double = 0.1) {
+        viewModelScope.launch {
+            try {
+                val req = PlaceOrderRequest(
+                    symbol = pair,
+                    side = side.lowercase(),
+                    type = "MARKET",
+                    size = lotSize,
+                    price = _uiState.value.currentPrice
+                )
+                val res = NetworkModule.apiService.placeOrder(req)
+                if (res.isSuccessful) {
+                    _uiState.value = _uiState.value.copy(
+                        statusMessage = "Order Filled: ${side.uppercase()} $lotSize lots of $pair"
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        statusMessage = "Order Blocked by Risk Engine"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(statusMessage = "Order error: ${e.message}")
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         NetworkModule.disconnectWebSocket()
