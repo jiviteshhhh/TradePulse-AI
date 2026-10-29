@@ -50,11 +50,19 @@ fun DashboardScreen(
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
-                Text(
-                    text = "Autonomous Forex Algo Engine",
-                    fontSize = 12.sp,
-                    color = TextSecondary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val tierColor = if (state.isDemoAccount) WarningAmber else ElectricBlue
+                    val tierText = if (state.isDemoAccount) "DEMO PAPER ACCOUNT" else "INSTITUTIONAL FUNDED TIER"
+                    Text(
+                        text = tierText,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = tierColor,
+                        modifier = Modifier
+                            .background(tierColor.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
             }
 
             // Connection Badge
@@ -91,7 +99,19 @@ fun DashboardScreen(
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "TOTAL PORTFOLIO EQUITY", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextMuted)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "TOTAL PORTFOLIO EQUITY", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextMuted)
+                    Text(
+                        text = if (state.isDemoAccount) "DEMO ACCOUNT" else "INSTITUTIONAL",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (state.isDemoAccount) WarningAmber else ElectricBlue
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -115,7 +135,7 @@ fun DashboardScreen(
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider(color = BorderStroke)
+                HorizontalDivider(color = BorderStroke)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
@@ -140,7 +160,7 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Active Forex Market Card (EUR/USD)
+        // Active Forex Market Card (EUR/USD) with Real-Time Dynamic Session Overlap
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = SurfaceCard),
@@ -161,8 +181,33 @@ fun DashboardScreen(
                         fontFamily = FontFamily.Monospace
                     )
                 }
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(text = "US Session Overlap | Pip Precision: 0.0001", fontSize = 11.sp, color = TextMuted)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(EmeraldGreen)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "${state.marketSession} | Spread: ${String.format("%.2f", state.spreadPips)} pips",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = EmeraldGreen
+                        )
+                    }
+                    Text(
+                        text = "Pip: 0.0001 • ${state.sessionVolatility}",
+                        fontSize = 10.sp,
+                        color = TextMuted
+                    )
+                }
             }
         }
 
@@ -241,8 +286,7 @@ fun DashboardScreen(
                         onClick = { viewModel.executeManualTrade(state.signal.direction) },
                         modifier = Modifier.fillMaxWidth().height(46.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
-                        shape = RoundedCornerShape(8.dp),
-                        enabled = !state.circuitBreaker.isHalted
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = "⚡ EXECUTE AI ${state.signal.direction} SIGNAL (${state.signal.confidencePercentage}%)",
@@ -257,7 +301,46 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Direct Market Execution (One-Tap Buy / Sell)
+        // Circuit Breaker Notification Banner if Halted
+        if (state.circuitBreaker.isHalted || state.circuitBreaker.emergencyKillSwitchEngaged) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = CoralRed.copy(alpha = 0.15f)),
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, CoralRed)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "⚠️ CIRCUIT BREAKER ENGAGED",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = CoralRed
+                        )
+                        Text(
+                            text = if (state.circuitBreaker.haltReason.isNotEmpty()) state.circuitBreaker.haltReason else "Trading paused by risk governance",
+                            fontSize = 10.sp,
+                            color = TextSecondary
+                        )
+                    }
+                    Button(
+                        onClick = { viewModel.resetCircuitBreaker() },
+                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Text("RESET", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
+        // Direct Market Execution (One-Tap Buy / Sell) - Always Enabled with Auto-Unhalt
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -266,8 +349,7 @@ fun DashboardScreen(
                 onClick = { viewModel.executeManualTrade("BUY") },
                 modifier = Modifier.weight(1f).height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
-                shape = RoundedCornerShape(10.dp),
-                enabled = !state.circuitBreaker.isHalted
+                shape = RoundedCornerShape(10.dp)
             ) {
                 Text("BUY EUR/USD", fontWeight = FontWeight.Bold, color = Color.Black, fontSize = 14.sp)
             }
@@ -275,8 +357,7 @@ fun DashboardScreen(
                 onClick = { viewModel.executeManualTrade("SELL") },
                 modifier = Modifier.weight(1f).height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = CoralRed),
-                shape = RoundedCornerShape(10.dp),
-                enabled = !state.circuitBreaker.isHalted
+                shape = RoundedCornerShape(10.dp)
             ) {
                 Text("SELL EUR/USD", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 14.sp)
             }

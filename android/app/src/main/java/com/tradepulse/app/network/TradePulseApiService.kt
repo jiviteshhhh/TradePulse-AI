@@ -31,4 +31,7 @@ interface TradePulseApiService {
 
     @GET("/api/v1/trades/history")
     suspend fun getTradeHistory(): Response<List<PositionModel>>
+
+    @POST("/api/v1/account/sync")
+    suspend fun syncAccount(@Body request: com.tradepulse.app.data.model.AccountSyncRequest): Response<Map<String, Any>>
 }

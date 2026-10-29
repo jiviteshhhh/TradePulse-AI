@@ -176,6 +176,32 @@ async def market_simulation_and_trading_loop():
                 "dailyDrawdownPercent": risk_status.loss_capacity_used_pct
             }
 
+            # Dynamic Forex Market Session & Real-Time Spread Calculation
+            utc_hour = time.gmtime().tm_hour
+            if 12 <= utc_hour < 16:
+                current_session = "London / NY Overlap"
+                session_vol = "Peak Institutional Flow"
+                base_spread = 0.2
+            elif 7 <= utc_hour < 12:
+                current_session = "London European Session"
+                session_vol = "High Continental Flow"
+                base_spread = 0.3
+            elif 16 <= utc_hour < 21:
+                current_session = "US Afternoon Session"
+                session_vol = "Moderate US Liquidity"
+                base_spread = 0.4
+            elif 0 <= utc_hour < 7:
+                current_session = "Tokyo Asian Session"
+                session_vol = "Range-Bound Volatility"
+                base_spread = 0.6
+            else:
+                current_session = "Sydney Asia-Pacific Session"
+                session_vol = "Pacific Liquidity"
+                base_spread = 0.7
+
+            # Live micro-fluctuation in bid/ask spread (e.g. 0.18 to 0.45 pips)
+            spread_pips = round(max(0.1, base_spread + random.uniform(-0.06, 0.08)), 2)
+
             # 8. Broadcast comprehensive telemetry packet via WebSocket
             telemetry_payload = {
                 "type": "TELEMETRY_UPDATE",
@@ -191,7 +217,11 @@ async def market_simulation_and_trading_loop():
                 "risk_metrics": risk_metrics_payload,
                 "signal": latest_signal,
                 "orderbook": live_ob,
-                "sentiment_usd": news_manager.get_currency_sentiment("USD")
+                "sentiment_usd": news_manager.get_currency_sentiment("USD"),
+                "market_session": current_session,
+                "spread_pips": spread_pips,
+                "session_volatility": session_vol,
+                "session_time_utc": time.strftime("%H:%M:%S UTC", time.gmtime())
             }
             await manager.broadcast(telemetry_payload)
 

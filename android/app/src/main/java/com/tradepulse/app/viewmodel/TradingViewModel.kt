@@ -22,7 +22,13 @@ data class TradingUiState(
     val signal: ConfluenceSignalModel = ConfluenceSignalModel(),
     val usdSentiment: Double = 0.0,
     val statusMessage: String? = null,
-    val isKillSwitchArmed: Boolean = false
+    val isKillSwitchArmed: Boolean = false,
+    val userEmail: String = "demo.trader@tradepulse.ai",
+    val isDemoAccount: Boolean = true,
+    val marketSession: String = "London / NY Overlap",
+    val spreadPips: Double = 0.20,
+    val sessionVolatility: String = "Peak Institutional Flow",
+    val sessionTimeUtc: String = ""
 )
 
 class TradingViewModel : ViewModel() {
@@ -33,6 +39,32 @@ class TradingViewModel : ViewModel() {
     init {
         startWebSocketListener()
         startPeriodicSync()
+    }
+
+    fun setTraderAccount(email: String, isDemo: Boolean, customBalance: Double = 0.0) {
+        val targetBalance = if (isDemo) 10000.0 else (if (customBalance > 0) customBalance else 50000.0)
+        _uiState.value = _uiState.value.copy(
+            userEmail = email,
+            isDemoAccount = isDemo,
+            accountBalance = targetBalance,
+            accountEquity = targetBalance,
+            statusMessage = if (isDemo) "Active: Demo Paper Account ($10,000 Capital)" else "Active: Institutional Funded Account ($${String.format("%,.0f", targetBalance)} Capital)"
+        )
+
+        viewModelScope.launch {
+            try {
+                NetworkModule.apiService.syncAccount(
+                    AccountSyncRequest(
+                        email = email,
+                        isDemo = isDemo,
+                        customBalance = targetBalance
+                    )
+                )
+                loadActiveTrades()
+            } catch (e: Exception) {
+                // quiet fallback
+            }
+        }
     }
 
     fun loadActiveTrades() {
@@ -78,7 +110,11 @@ class TradingViewModel : ViewModel() {
                     circuitBreaker = packet.circuitBreaker,
                     signal = packet.signal,
                     usdSentiment = packet.sentimentUsd,
-                    isKillSwitchArmed = packet.circuitBreaker.emergencyKillSwitchEngaged || packet.circuitBreaker.isHalted
+                    isKillSwitchArmed = packet.circuitBreaker.emergencyKillSwitchEngaged || packet.circuitBreaker.isHalted,
+                    marketSession = if (packet.marketSession.isNotEmpty()) packet.marketSession else _uiState.value.marketSession,
+                    spreadPips = if (packet.spreadPips > 0) packet.spreadPips else _uiState.value.spreadPips,
+                    sessionVolatility = if (packet.sessionVolatility.isNotEmpty()) packet.sessionVolatility else _uiState.value.sessionVolatility,
+                    sessionTimeUtc = packet.sessionTimeUtc
                 )
             }
         }
@@ -125,6 +161,24 @@ class TradingViewModel : ViewModel() {
     fun executeManualTrade(side: String, pair: String = _uiState.value.activePair, lotSize: Double = 0.1) {
         viewModelScope.launch {
             try {
+                // If circuit breaker was halted or kill switch engaged, automatically reset to allow trader override
+                if (_uiState.value.circuitBreaker.isHalted || _uiState.value.circuitBreaker.emergencyKillSwitchEngaged) {
+                    try {
+                        NetworkModule.apiService.resetCircuitBreaker()
+                        _uiState.value = _uiState.value.copy(
+                            circuitBreaker = _uiState.value.circuitBreaker.copy(
+                                isHalted = false,
+                                circuitBreakerActive = false,
+                                emergencyKillSwitchEngaged = false,
+                                haltReason = ""
+                            ),
+                            isKillSwitchArmed = false
+                        )
+                    } catch (e: Exception) {
+                        // ignore
+                    }
+                }
+
                 val req = PlaceOrderRequest(
                     symbol = pair,
                     side = side.lowercase(),
@@ -135,12 +189,12 @@ class TradingViewModel : ViewModel() {
                 val res = NetworkModule.apiService.placeOrder(req)
                 if (res.isSuccessful) {
                     _uiState.value = _uiState.value.copy(
-                        statusMessage = "Order Filled: ${side.uppercase()} $lotSize lots of $pair"
+                        statusMessage = "Order Filled: ${side.uppercase()} $lotSize lots of $pair @ ${String.format("%.5f", _uiState.value.currentPrice)}"
                     )
                     loadActiveTrades()
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        statusMessage = "Order Blocked by Risk Engine"
+                        statusMessage = "Order Blocked by Risk Engine: ${res.code()}"
                     )
                 }
             } catch (e: Exception) {

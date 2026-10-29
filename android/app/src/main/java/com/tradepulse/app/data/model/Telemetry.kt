@@ -14,7 +14,11 @@ data class TelemetryPacket(
     @SerializedName("open_positions") val openPositions: List<PositionModel> = emptyList(),
     @SerializedName("circuit_breaker") val circuitBreaker: CircuitBreakerModel = CircuitBreakerModel(),
     @SerializedName("signal") val signal: ConfluenceSignalModel = ConfluenceSignalModel(),
-    @SerializedName("sentiment_usd") val sentimentUsd: Double = 0.0
+    @SerializedName("sentiment_usd") val sentimentUsd: Double = 0.0,
+    @SerializedName("market_session") val marketSession: String = "London / NY Overlap",
+    @SerializedName("spread_pips") val spreadPips: Double = 0.20,
+    @SerializedName("session_volatility") val sessionVolatility: String = "Peak Institutional Flow",
+    @SerializedName("session_time_utc") val sessionTimeUtc: String = ""
 )
 
 data class PositionModel(
@@ -69,4 +73,10 @@ data class PlaceOrderRequest(
     @SerializedName("price") val price: Double = 0.0,
     @SerializedName("stopLoss") val stopLoss: Double? = null,
     @SerializedName("takeProfit") val takeProfit: Double? = null
+)
+
+data class AccountSyncRequest(
+    @SerializedName("email") val email: String,
+    @SerializedName("is_demo") val isDemo: Boolean = false,
+    @SerializedName("custom_balance") val customBalance: Double = 0.0
 )

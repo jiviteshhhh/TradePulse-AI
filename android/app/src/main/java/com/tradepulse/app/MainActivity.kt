@@ -60,10 +60,12 @@ class MainActivity : ComponentActivity() {
                         onLoginSuccess = { email ->
                             userEmail = email
                             isAuthenticated = true
+                            viewModel.setTraderAccount(email = email, isDemo = false)
                         },
                         onDemoLogin = {
                             userEmail = "demo.trader@tradepulse.ai"
                             isAuthenticated = true
+                            viewModel.setTraderAccount(email = "demo.trader@tradepulse.ai", isDemo = true)
                         }
                     )
                 } else {
@@ -73,6 +75,7 @@ class MainActivity : ComponentActivity() {
                         onSignOut = {
                             authManager.signOut()
                             isAuthenticated = false
+                            viewModel.setTraderAccount(email = "demo.trader@tradepulse.ai", isDemo = true)
                         }
                     )
                 }

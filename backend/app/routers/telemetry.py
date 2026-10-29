@@ -20,6 +20,36 @@ class KillSwitchRequest(BaseModel):
     reason: str = "Triggered by User from Android Dashboard"
 
 
+class AccountSyncRequest(BaseModel):
+    email: str
+    is_demo: bool = False
+    custom_balance: float = 0.0
+
+
+@router.post("/account/sync")
+def sync_account_balance(req: AccountSyncRequest):
+    from ..main import broker, circuit_breaker
+    if req.is_demo:
+        broker.balance = 10000.0
+        circuit_breaker.starting_daily_balance = 10000.0
+    else:
+        # Real trader accounts default to $50,000.00 funded balance or custom balance
+        target_balance = req.custom_balance if req.custom_balance > 0 else 50000.0
+        broker.balance = target_balance
+        circuit_breaker.starting_daily_balance = target_balance
+
+    # Clear old circuit breaker halt if switching accounts
+    circuit_breaker.reset_circuit_breaker()
+
+    return {
+        "status": "SUCCESS",
+        "email": req.email,
+        "is_demo": req.is_demo,
+        "account_balance": broker.balance,
+        "equity": broker.get_equity()
+    }
+
+
 @router.get("/status")
 def get_system_status() -> Dict[str, Any]:
     from ..main import broker, circuit_breaker, confluence_engine, news_manager, current_prices, active_pair
