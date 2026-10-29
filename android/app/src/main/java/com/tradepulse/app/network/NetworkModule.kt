@@ -1,5 +1,9 @@
 package com.tradepulse.app.network
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -36,15 +40,29 @@ object NetworkModule {
             .create(TradePulseApiService::class.java)
     }
 
-    val webSocketListener = TradePulseWebSocketListener()
+    val webSocketListener = TradePulseWebSocketListener().apply {
+        onConnectionLost = {
+            activeWebSocket = null
+            CoroutineScope(Dispatchers.IO).launch {
+                delay(2000)
+                connectWebSocket()
+            }
+        }
+    }
     private var activeWebSocket: WebSocket? = null
 
+    @Synchronized
     fun connectWebSocket() {
         if (activeWebSocket != null) return
-        val request = Request.Builder().url(getWsUrl()).build()
-        activeWebSocket = okHttpClient.newWebSocket(request, webSocketListener)
+        try {
+            val request = Request.Builder().url(getWsUrl()).build()
+            activeWebSocket = okHttpClient.newWebSocket(request, webSocketListener)
+        } catch (e: Exception) {
+            activeWebSocket = null
+        }
     }
 
+    @Synchronized
     fun disconnectWebSocket() {
         activeWebSocket?.close(1000, "App paused")
         activeWebSocket = null

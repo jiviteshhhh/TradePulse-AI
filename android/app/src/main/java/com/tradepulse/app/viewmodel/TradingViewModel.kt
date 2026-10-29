@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tradepulse.app.data.model.*
 import com.tradepulse.app.network.NetworkModule
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +32,29 @@ class TradingViewModel : ViewModel() {
 
     init {
         startWebSocketListener()
+        startPeriodicSync()
+    }
+
+    fun loadActiveTrades() {
+        viewModelScope.launch {
+            try {
+                val res = NetworkModule.apiService.getActiveTrades()
+                if (res.isSuccessful && res.body() != null) {
+                    _uiState.value = _uiState.value.copy(openPositions = res.body()!!)
+                }
+            } catch (e: Exception) {
+                // quiet fallback
+            }
+        }
+    }
+
+    private fun startPeriodicSync() {
+        viewModelScope.launch {
+            while (true) {
+                loadActiveTrades()
+                delay(2000)
+            }
+        }
     }
 
     private fun startWebSocketListener() {
@@ -50,7 +74,7 @@ class TradingViewModel : ViewModel() {
                     accountEquity = packet.accountEquity,
                     accountBalance = packet.accountBalance,
                     unrealizedPnl = packet.unrealizedPnl,
-                    openPositions = packet.openPositions,
+                    openPositions = if (packet.openPositions.isNotEmpty() || _uiState.value.openPositions.isEmpty()) packet.openPositions else _uiState.value.openPositions,
                     circuitBreaker = packet.circuitBreaker,
                     signal = packet.signal,
                     usdSentiment = packet.sentimentUsd,
@@ -113,6 +137,7 @@ class TradingViewModel : ViewModel() {
                     _uiState.value = _uiState.value.copy(
                         statusMessage = "Order Filled: ${side.uppercase()} $lotSize lots of $pair"
                     )
+                    loadActiveTrades()
                 } else {
                     _uiState.value = _uiState.value.copy(
                         statusMessage = "Order Blocked by Risk Engine"

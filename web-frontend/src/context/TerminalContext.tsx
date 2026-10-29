@@ -205,7 +205,7 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }));
 
       // 3. Synchronize Open Positions
-      if (telemetry.open_positions && telemetry.open_positions.length > 0) {
+      if (telemetry.open_positions) {
         const mappedPositions: Position[] = telemetry.open_positions.map((p) => ({
           id: p.id,
           symbol: p.pair,
@@ -356,6 +356,15 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Dispatch order to Python backend execution router
       backendApi.placeOrder(params);
 
+      // Also bridge to Android native ViewModel if running in Android WebView
+      if (typeof window !== 'undefined' && (window as any).AndroidBridge?.onOrderPlaced) {
+        try {
+          (window as any).AndroidBridge.onOrderPlaced(params.symbol, params.side, params.size);
+        } catch (e) {
+          // ignore
+        }
+      }
+
       const newOrder: AlgoOrder = {
         id,
         clientOrderId: `${params.type}-${params.symbol.slice(0, 3)}-${Math.floor(Math.random() * 999)}`,
@@ -363,10 +372,10 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         side: params.side,
         type: params.type,
         size: params.size,
-        filledSize: params.type === 'MARKET' ? params.size : 0,
+        filledSize: params.size,
         price: params.price,
-        avgFillPrice: params.type === 'MARKET' ? params.price : 0,
-        status: params.type === 'MARKET' ? 'FILLED' : 'OPEN',
+        avgFillPrice: params.price,
+        status: 'FILLED',
         timestamp: timeStr,
         venue: params.venue || 'Smart Router (SOR)',
         timeInForce: params.timeInForce || 'GTC',
@@ -378,8 +387,8 @@ export const TerminalProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       setOrders((prev) => [newOrder, ...prev]);
 
-      // If Market order, instantly adjust position or create position
-      if (params.type === 'MARKET') {
+      // Instantly adjust position or create position for executable orders
+      if (params.type === 'MARKET' || params.type === 'LIMIT') {
         const notional = Number((params.size * params.price).toFixed(2));
         const posSide = params.side === 'buy' ? 'long' : 'short';
 

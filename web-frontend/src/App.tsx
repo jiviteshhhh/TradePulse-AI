@@ -22,15 +22,15 @@ const TerminalWorkspace: React.FC = () => {
 
   return (
     <div
-      className={`flex flex-col w-screen bg-[#0B0F19] text-[#F8FAFC] select-none ${
-        viewMode === 'docked' ? 'h-screen overflow-hidden' : 'min-h-screen overflow-y-auto'
+      className={`flex flex-col w-full bg-[#0B0F19] text-[#F8FAFC] select-none ${
+        viewMode === 'docked' ? 'h-screen overflow-hidden' : 'min-h-screen'
       }`}
     >
       {/* Institutional Header & Navigation */}
       <HeaderTelemetry />
 
       {/* Main Active Desk Viewport with native vertical scrolling */}
-      <main className="flex-1 flex flex-col overflow-y-auto relative min-h-0">
+      <main className="flex-1 flex flex-col relative">
         {activeDesk === 'execution' && <DeskExecution />}
         {activeDesk === 'strategies' && <DeskStrategies />}
         {activeDesk === 'orderflow' && <DeskOrderFlow />}

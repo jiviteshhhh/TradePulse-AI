@@ -32,6 +32,11 @@ class AndroidBridge(private val viewModel: TradingViewModel) {
     fun onMaxLossUpdated(limit: Double) {
         viewModel.updateMaxLossLimit(limit)
     }
+
+    @JavascriptInterface
+    fun onOrderPlaced(symbol: String, side: String, size: Double) {
+        viewModel.loadActiveTrades()
+    }
 }
 
 @SuppressLint("SetJavaScriptEnabled")

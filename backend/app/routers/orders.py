@@ -54,11 +54,36 @@ def place_order(req: PlaceOrderRequest) -> Dict[str, Any]:
     order_id = f"ORD-{uuid.uuid4().hex[:8].upper()}"
     timestamp_str = time.strftime("%H:%M:%S")
 
-    # If MARKET order or LIMIT at market price, execute into broker positions immediately
-    is_market = req.type.upper() == "MARKET" or abs(req.price - curr_price) < 0.0002
+    # In paper execution desk, fill orders immediately at current market price or specified limit
+    fill_price = curr_price if (req.price <= 0 or req.type.upper() == "MARKET" or abs(req.price - curr_price) > 0.05) else req.price
+    status = "FILLED"
+    direction = "BUY" if req.side.lower() == "buy" else "SELL"
 
-    status = "FILLED" if is_market else "OPEN"
-    fill_price = curr_price if is_market else 0.0
+    # Asset-specific Stop Loss & Take Profit defaults
+    if "BTC" in req.symbol or "ETH" in req.symbol or "SOL" in req.symbol or "PERP" in req.symbol:
+        sl_delta = fill_price * 0.015  # 1.5% SL
+        tp_delta = fill_price * 0.030  # 3.0% TP
+        round_decimals = 2
+    elif "JPY" in req.symbol:
+        sl_delta = 0.25  # 25 pips
+        tp_delta = 0.50  # 50 pips
+        round_decimals = 3
+    else:
+        sl_delta = 0.0020  # 20 pips
+        tp_delta = 0.0040  # 40 pips
+        round_decimals = 5
+
+    sl = req.stopLoss or (fill_price - sl_delta if direction == "BUY" else fill_price + sl_delta)
+    tp = req.takeProfit or (fill_price + tp_delta if direction == "BUY" else fill_price - tp_delta)
+
+    pos = broker.execute_order(
+        pair=req.symbol,
+        direction=direction,
+        lot_size=req.size,
+        current_price=fill_price,
+        stop_loss=round(sl, round_decimals),
+        take_profit=round(tp, round_decimals)
+    )
 
     order_record = {
         "id": order_id,
@@ -67,8 +92,8 @@ def place_order(req: PlaceOrderRequest) -> Dict[str, Any]:
         "side": req.side.lower(),
         "type": req.type.upper(),
         "size": req.size,
-        "filledSize": req.size if is_market else 0.0,
-        "price": req.price if req.price > 0 else curr_price,
+        "filledSize": req.size,
+        "price": fill_price,
         "avgFillPrice": fill_price,
         "status": status,
         "timestamp": timestamp_str,
@@ -76,24 +101,10 @@ def place_order(req: PlaceOrderRequest) -> Dict[str, Any]:
         "timeInForce": req.timeInForce,
         "slippageTolerancePercent": 0.05,
         "postOnly": req.postOnly,
-        "reduceOnly": req.reduceOnly
+        "reduceOnly": req.reduceOnly,
+        "positionId": pos.id
     }
     blotter_orders.insert(0, order_record)
-
-    # If executed, open in broker position tracker
-    if is_market:
-        direction = "BUY" if req.side.lower() == "buy" else "SELL"
-        sl = req.stopLoss or (curr_price - 0.0020 if direction == "BUY" else curr_price + 0.0020)
-        tp = req.takeProfit or (curr_price + 0.0040 if direction == "BUY" else curr_price - 0.0040)
-        pos = broker.execute_order(
-            pair=req.symbol,
-            direction=direction,
-            lot_size=req.size,
-            current_price=curr_price,
-            stop_loss=sl,
-            take_profit=tp
-        )
-        order_record["positionId"] = pos.id
 
     return {
         "message": f"Order {order_id} {status}",

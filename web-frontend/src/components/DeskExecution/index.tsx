@@ -6,27 +6,27 @@ import { OrderBlotter } from './OrderBlotter';
 
 export const DeskExecution: React.FC = () => {
   return (
-    <div className="flex-1 flex flex-col gap-2 p-2 overflow-y-auto min-h-0">
-      {/* Upper trading grid: Chart (6 col) + OrderBook (3 col) + OrderTicket (3 col) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 shrink-0 min-h-[460px]">
+    <div className="flex-1 flex flex-col gap-2 p-2">
+      {/* Upper trading grid: Chart (6 col) + OrderTicket (3 col) + OrderBook (3 col) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 shrink-0">
         {/* Chart Viewport */}
-        <div className="lg:col-span-6 h-full min-h-[380px]">
+        <div className="order-1 lg:col-span-6 h-[380px]">
           <TradingViewChart />
         </div>
 
-        {/* Level 2 Order Book */}
-        <div className="lg:col-span-3 h-full min-h-[380px]">
-          <OrderBook />
+        {/* Algorithmic Order Ticket (prioritized right below chart on mobile) */}
+        <div className="order-2 lg:order-3 lg:col-span-3 min-h-[380px]">
+          <OrderTicket />
         </div>
 
-        {/* Algorithmic Order Ticket */}
-        <div className="lg:col-span-3 h-full min-h-[380px]">
-          <OrderTicket />
+        {/* Level 2 Order Book */}
+        <div className="order-3 lg:order-2 lg:col-span-3 min-h-[340px]">
+          <OrderBook />
         </div>
       </div>
 
       {/* Lower Blotter: Positions, Algo Orders, Fills */}
-      <div className="h-[270px] min-h-[220px] shrink-0">
+      <div className="order-4 min-h-[260px] shrink-0">
         <OrderBlotter />
       </div>
     </div>

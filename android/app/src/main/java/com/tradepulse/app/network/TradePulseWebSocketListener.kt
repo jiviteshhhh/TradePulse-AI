@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import okhttp3.*
 
 class TradePulseWebSocketListener(
-    private val gson: Gson = Gson()
+    private val gson: Gson = Gson(),
+    var onConnectionLost: (() -> Unit)? = null
 ) : WebSocketListener() {
 
     private val _telemetryFlow = MutableSharedFlow<TelemetryPacket>(extraBufferCapacity = 64)
@@ -37,10 +38,12 @@ class TradePulseWebSocketListener(
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         Log.w("TradePulseWS", "WebSocket Closed: $reason")
         _connectionState.tryEmit(false)
+        onConnectionLost?.invoke()
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         Log.e("TradePulseWS", "WebSocket Failure: ${t.message}")
         _connectionState.tryEmit(false)
+        onConnectionLost?.invoke()
     }
 }

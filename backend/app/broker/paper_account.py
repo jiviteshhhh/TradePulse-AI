@@ -72,9 +72,19 @@ class PaperBrokerGateway:
             curr = current_prices.get(pos.pair, pos.current_price)
             pos.current_price = curr
 
-            # Calculate PnL: standard lot (100k) EUR/USD 1 pip = $10
-            pip_diff = (curr - pos.entry_price) / 0.0001 if pos.direction == "BUY" else (pos.entry_price - curr) / 0.0001
-            dollar_pnl = pip_diff * (pos.lot_size * 10.0)
+            # Calculate PnL: Crypto, JPY pairs, and Standard Forex
+            if "BTC" in pos.pair or "ETH" in pos.pair or "SOL" in pos.pair or "PERP" in pos.pair:
+                price_delta = (curr - pos.entry_price) if pos.direction == "BUY" else (pos.entry_price - curr)
+                dollar_pnl = price_delta * pos.lot_size
+                pip_diff = (price_delta / (pos.entry_price or 1.0)) * 100.0
+            elif "JPY" in pos.pair:
+                pip_diff = (curr - pos.entry_price) / 0.01 if pos.direction == "BUY" else (pos.entry_price - curr) / 0.01
+                dollar_pnl = pip_diff * (pos.lot_size * 9.5)
+            else:
+                # Standard Forex: 1 pip = 0.0001, standard lot (100k) EUR/USD 1 pip = $10
+                pip_diff = (curr - pos.entry_price) / 0.0001 if pos.direction == "BUY" else (pos.entry_price - curr) / 0.0001
+                dollar_pnl = pip_diff * (pos.lot_size * 10.0)
+
             pos.floating_pnl = round(dollar_pnl, 2)
             pos.pips_gained = round(pip_diff, 1)
 

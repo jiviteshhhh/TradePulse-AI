@@ -7,7 +7,7 @@ export const OrderTicket: React.FC = () => {
   const { selectedAsset, placeOrder, selectedPrice, setSelectedPrice, risk } = useTerminal();
 
   const [side, setSide] = useState<OrderSide>('buy');
-  const [orderType, setOrderType] = useState<OrderType>('LIMIT');
+  const [orderType, setOrderType] = useState<OrderType>('MARKET');
   const [price, setPrice] = useState<string>(selectedAsset.price.toString());
   const [size, setSize] = useState<string>('0.5');
   const [timeInForce, setTimeInForce] = useState<TimeInForce>('GTC');
@@ -298,10 +298,14 @@ export const OrderTicket: React.FC = () => {
             <span className="tabular-nums">${estimatedFee.toFixed(2)}</span>
           </div>
 
-          {/* Primary Action Button in Amber Gold */}
+          {/* Primary Action Button (Green for BUY, Red for SELL) */}
           <button
             type="submit"
-            className="w-full py-2.5 bg-[#F59E0B] hover:bg-[#D97706] active:scale-[0.99] text-[#0B0F19] font-['JetBrains_Mono'] font-bold text-xs uppercase rounded transition-all cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(245,158,11,0.25)] focus:ring-1 focus:ring-[#FBBF24] focus:ring-offset-2 focus:ring-offset-[#0B0F19]"
+            className={`w-full py-2.5 font-['JetBrains_Mono'] font-bold text-xs uppercase rounded transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99] ${
+              side === 'buy'
+                ? 'bg-[#10B981] hover:bg-[#059669] text-[#0B0F19] shadow-[0_0_16px_rgba(16,185,129,0.35)]'
+                : 'bg-[#EF4444] hover:bg-[#DC2626] text-white shadow-[0_0_16px_rgba(239,68,68,0.35)]'
+            }`}
           >
             <Send className="w-3.5 h-3.5" />
             <span>
